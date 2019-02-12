@@ -20,13 +20,13 @@ def sheetByName( fileName
     typeX = fileName[fileName.find('.')+1 :]
     try:
         if typeX.lower() == 'xlsx':
-            book = openpyxl.load_workbook(filename = fileName, read_only=True, keep_vba=False, data_only=False) # xlsx
+            book = openpyxl.load_workbook(filename = fileName, read_only=False, keep_vba=False, data_only=False) # xlsx
             sheet = book[sheetName]                                                                              # xlsx 
         else:
             book = xlrd.open_workbook( fileName.encode('cp1251'), formatting_info=True)                          # xls
             sheet = book.sheet_by_name(sheetName)
     except Exception as e:
-        printf("<%s> <%s> <%S> <<%s>>",fileName, typeX, sheetName,e)
+        print("<%s> <%s> <%S> <<%s>>",fileName, typeX, sheetName,e)
         sheet = False
     return sheet
 
