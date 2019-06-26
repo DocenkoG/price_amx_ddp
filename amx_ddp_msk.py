@@ -9,7 +9,7 @@ import time
 import shutil
 import openpyxl                      # Для .xlsx
 #import xlrd                          # для .xls
-from   price_tools import getCellXlsx, getCell, quoted, dump_cell, currencyType, openX, sheetByName
+from   price_tools import getCellXlsx, getCell, nameToId, currencyType, openX, sheetByName
 import csv
 import requests, lxml.html
 
@@ -138,8 +138,7 @@ def convert_excel2csv(cfg):
                         shablon = str(round(vvv1 * vvv2, 2))
                     recOut[outColName] = shablon.strip()
 
-#                if  recOut["валюта"]=="" :
-#                    recOut["валюта"] = "USD"
+                recOut['код'] = nameToId(recOut['код'])
                 csvWriter.writerow(recOut)
 
         except Exception as e:
@@ -328,7 +327,9 @@ def download( cfg ):
 
 def config_read( cfgFName ):
     cfg = configparser.ConfigParser(inline_comment_prefixes=('#'))
-    if  os.path.exists('private.cfg'):     
+    if  os.path.exists('getting.cfg'):
+        cfg.read('getting.cfg', encoding='utf-8')
+    if  os.path.exists('private.cfg'):
         cfg.read('private.cfg', encoding='utf-8')
     if  os.path.exists(cfgFName):     
         cfg.read( cfgFName, encoding='utf-8')
@@ -362,18 +363,6 @@ def make_loger():
 
 
 
-def processing(cfgFName):
-    log.info('----------------------- Processing '+cfgFName )
-    cfg = config_read(cfgFName)
-    filename_out = cfg.get('basic','filename_out')
-    filename_in  = cfg.get('basic','filename_in')
-    
-        #os.system( 'marvel_converter_xlsx.xlsm')
-        #convert_csv2csv(cfg)
-    convert_excel2csv(cfg)
-    folderName = os.path.basename(os.getcwd())
-
-
 def main(dealerName):
     """ Обработка прайсов выполняется согласно файлов конфигурации.
     Для этого в текущей папке должны быть файлы конфигурации, описывающие
@@ -383,11 +372,11 @@ def main(dealerName):
     make_loger()
     log.info('          ' + dealerName)
 
-    if  os.path.exists('getting.cfg'):
+    rc_download = False
+    if os.path.exists('getting.cfg'):
         cfg = config_read('getting.cfg')
         filename_new = cfg.get('basic','filename_new')
 
-        rc_download = False
         if cfg.has_section('download'):
             rc_download = download(cfg)
         if not(rc_download==True or is_file_fresh( filename_new, int(cfg.get('basic','срок годности')))):
@@ -395,7 +384,12 @@ def main(dealerName):
 
     for cfgFName in os.listdir("."):
         if cfgFName.startswith("cfg") and cfgFName.endswith(".cfg"):
-            processing(cfgFName)
+            log.info('----------------------- Processing '+cfgFName )
+            cfg = config_read(cfgFName)
+            filename_in = cfg.get('basic','filename_in')
+            if rc_download==True or is_file_fresh( filename_in, int(cfg.get('basic','срок годности'))):
+                convert_excel2csv(cfg)
+
 
 
 if __name__ == '__main__':
